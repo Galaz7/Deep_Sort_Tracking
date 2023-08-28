@@ -1,6 +1,4 @@
 # Tracking for HIVE
-
-
 <div align="center">
 <p>
 <img src="trackers/strong_sort/results/output_th025.gif" width="400"/> 
