@@ -1,0 +1,42 @@
+# In case you would like to rebuild the docker, it should be done in the DeepSortTracking directory using the following commands:
+
+sudo chmod 777 build_docker.sh
+./build_docker.sh
+
+
+
+# To run the tracker, first run the docker image
+
+docker run -it --network host --runtime nvidia full_tracker_image
+
+
+
+# Inside the docker image run the following command:
+# Single line tracking on RTP stream and streaming the results to a client
+
+python3 track.py --source "udpsrc port=7943 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264,payload=96 ! \
+	queue max-size-buffers=50 ! rtph264depay ! h264parse ! avdec_h264 ! videorate ! video/x-raw, format=I420, \
+	framerate=25/5 ! videoconvert ! videoscale ! appsink sync=false" \
+	--yolo-weights weights/best.engine \
+	--reid-weights weights/osnet_x0_25_msmt17.engine \
+	--tracking-method strongsort \
+	--stream-tracking-results 2 \
+	--half \
+	--image_size 384 640 \
+	--yolo-rate 3 \
+	--stream-tracking-ip 10.0.21.135 \
+	--stream-tracking-port 7654
+
+# udpsrc port: 				the port from which to read the incoming RTP stream
+# framerate: 				filters the number of frames used per second out of full number of frames received
+# yolo-weights              weights of the yolo model (.pt for pytorch model, .engine for tensorrt model)
+# reid-weights              weights of the tracking model (.pt for pytorch model, .engine for tensorrt model)
+# yolo-rate:                makes new YOLO detections every `yolo-rate` frames
+# stream-tracking-ip: 		ip to stream the resultant frames to
+# stream-tracking-port: 	port to stream the resultant frames to
+# stream-tracking-results:  0 - doesn't stream results
+                            1 - streams frames with detections using GStreamer
+                            2 - sends only detections through a socket
+
+
+gst-launch-1.0 udpsrc port=5003 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264, payload=96 ! queue ! rtph264depay ! h264parse ! avdec_h264 ! video/x-raw,format=I420 ! videoconvert ! videoscale ! autovideosink sync=false

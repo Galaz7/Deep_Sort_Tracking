@@ -1,0 +1,10 @@
+To compile the .pt file to tensorRT .engine files use the following commands:
+
+Compilation of the yolov5:
+python3 yolov5/export.py --weights yolov5/best.pt --device 0 --include engine
+
+Compilation of the tracker:
+python3 trackers/reid_export.py --device 0 --weights weights/osnet_x0_25_msmt17.pt --include engine --dynamic --batch-size 50
+
+Notes:
+    - in each line, the first argument refers to the export script, and the weights argument refers to the .pt weights file respectively

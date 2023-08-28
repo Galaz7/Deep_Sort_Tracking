@@ -1,0 +1,21 @@
+# Run tracking on video located on the device
+python3 track.py --source data/250m_day_2walking.mp4 --yolo-weights weights/best.pt --tracking-method strongsort
+
+# Single line tracking on RTP video stream
+python3 track.py --source "udpsrc port=5004 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264,payload=96 ! queue max-size-buffers=50 ! rtph264depay ! h264parse ! avdec_h264 ! videorate ! video/x-raw, format=I420, framerate=25/3 ! videoconvert ! videoscale ! appsink sync=false" --yolo-weights weights/best.pt --tracking-method strongsort
+
+# Single line tracking on RTP stream and streaming back results to destination
+python3 track.py --source "udpsrc port=5004 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264,payload=96 ! \
+                            queue max-size-buffers=50 ! rtph264depay ! h264parse ! avdec_h264 ! videorate ! video/x-raw, format=I420, \
+                            framerate=25/5 ! videoconvert ! videoscale ! appsink sync=false" \
+                            --yolo-weights weights/best.pt --tracking-method strongsort --stream-tracking-results \
+                            --yolo-rate 3 --stream-tracking-ip 192.168.100.74 --half
+
+
+# Streaming video from file on RTP to specified address and port
+gst-launch-1.0 filesrc location=data/30m_day_2walking.mp4 ! decodebin ! x264enc ! rtph264pay ! udpsink host=127.0.0.1 port=5004
+
+# Receiving video stream with RTP in specified port and visualizing it
+gst-launch-1.0 udpsrc port=5003 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264,
+                payload=96 ! queue ! rtph264depay ! h264parse ! avdec_h264 ! video/x-raw,format=I420 ! videoconvert !
+                 videoscale ! autovideosink sync=false
